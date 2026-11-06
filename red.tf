@@ -153,7 +153,10 @@ resource "aws_route_table" "privada" {
 # --- TODO 2.5: asociaciones ---------------------------------------------------------
 # Escriban ustedes el recurso aws_route_table_association "privada" para las
 # dos subredes privadas, copiando el modelo de las públicas.
+<<<<<<< HEAD
 
+=======
+>>>>>>> origin/main
 resource "aws_route_table_association" "privada" {
   count          = 2
   subnet_id      = aws_subnet.privada[count.index].id
