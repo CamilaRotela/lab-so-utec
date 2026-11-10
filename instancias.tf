@@ -35,13 +35,13 @@ variable "tipo_bastion" {
   type        = string
   default     = "t4g.micro"
 }
-
+#
 variable "tipo_privada" {
   description = "Tipo de instancia del servidor privado (Amazon Linux 2023)."
   type        = string
   default     = "t4g.nano"
 }
-
+#
 variable "version_fedora" {
   description = "Versión de Fedora Cloud a buscar."
   type        = string
@@ -59,7 +59,7 @@ variable "version_fedora" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-
+  #
   filter {
     name   = "name"
     values = ["al2023-ami-2023.*-kernel-*-arm64"]
@@ -69,7 +69,7 @@ data "aws_ami" "amazon_linux" {
     values = ["arm64"]
   }
 }
-
+#
 # A COMPLETAR — Fedora Cloud. Datos:
 #   - El Proyecto Fedora publica sus AMI desde la cuenta 125523088429.
 #   - Para explorar los nombres disponibles:
@@ -82,7 +82,7 @@ data "aws_ami" "amazon_linux" {
 data "aws_ami" "fedora" {
   most_recent = true
   owners      = ["125523088429"]
-
+  #
   filter {
     name   = "name"
     values = ["Fedora-Cloud-Base*-${var.version_fedora}-*"]
@@ -109,7 +109,7 @@ resource "aws_security_group" "bastion" {
   vpc_id      = aws_vpc.principal.id
   tags        = { Name = "lab-${var.grupo}-bastion" }
 }
-
+#
 resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
   security_group_id = aws_security_group.bastion.id
   description       = "SSH desde la IP del grupo"
@@ -118,7 +118,7 @@ resource "aws_vpc_security_group_ingress_rule" "bastion_ssh" {
   to_port           = 22
   cidr_ipv4         = var.mi_ip_cidr
 }
-
+#
 resource "aws_vpc_security_group_ingress_rule" "bastion_vpn" {
   security_group_id = aws_security_group.bastion.id
   description       = "OpenVPN"
@@ -127,25 +127,24 @@ resource "aws_vpc_security_group_ingress_rule" "bastion_vpn" {
   to_port           = 1194
   cidr_ipv4         = "0.0.0.0/0"
 }
-
+#
 resource "aws_vpc_security_group_egress_rule" "bastion_salida" {
   security_group_id = aws_security_group.bastion.id
   description       = "Salida libre"
   ip_protocol       = "-1" # -1 = todos los protocolos
   cidr_ipv4         = "0.0.0.0/0"
 }
-
+#
 # A COMPLETAR — servidor privado:
 #   entrada: SSH solo desde el BASTIÓN. No usen una IP: usen el security group
 #            del bastión como origen (atributo referenced_security_group_id).
-#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.
-#            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
+#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.} #            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
 #            from_port = -1, to_port = -1).
 #   salida : libre (sale a Internet a través del NAT).
 #
 # Pregunta para el informe: cuando un cliente VPN se conecta al servidor
 # privado, ¿por qué alcanza con la regla "desde el SG del bastión"?
-
+#
 resource "aws_security_group" "privada" {
   name        = "lab-${var.grupo}-privada"
   description = "Servidor privado: acceso SSH desde bastion"
@@ -172,7 +171,6 @@ resource "aws_vpc_security_group_egress_rule" "privada_salida" {
   cidr_ipv4         = "0.0.0.0/0"
 }
 
-
 # --- TODO 4.4: instancias ------------------------------------------------------------
 # EJEMPLO RESUELTO — bastión:
 #
@@ -183,22 +181,22 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.bastion.id]
   key_name               = aws_key_pair.bastion.key_name # clave PROPIA del bastión
   iam_instance_profile   = module.servicios.perfil_instancia
-
+  #
   #   # Si se ejecuta "sudo shutdown" dentro de la instancia, se APAGA (stop)
   #   # en lugar de destruirse. Lo usamos para el apagado automático.
   instance_initiated_shutdown_behavior = "stop"
-
+  #
   metadata_options {
     http_tokens = "required" # obliga a usar IMDSv2 (más seguro)
   }
-
+  #
   root_block_device {
     volume_type = "gp3" # más barato que gp2 a igual tamaño
   }
-
+  #
   tags = { Name = "lab-${var.grupo}-bastion", Rol = "bastion" }
 }
-
+#
 # A COMPLETAR — servidor privado. Diferencias con el bastión:
 #   - AMI de Amazon Linux, tipo var.tipo_privada
 #   - subred PRIVADA (aws_subnet.privada[0])
@@ -216,7 +214,7 @@ resource "aws_instance" "privada" {
   key_name               = aws_key_pair.privada.key_name
   iam_instance_profile   = module.servicios.perfil_instancia
 
-  #  Instala nginx y prepara el sitio web al iniciar la instancia
+  # Instala nginx y prepara el sitio web al iniciar la instancia
   user_data = templatefile("${path.root}/plantillas/servidor-web.sh.tftpl", {
     script_sitio = module.servicios.script_sitio_vm
   })
@@ -281,7 +279,7 @@ resource "aws_instance" "privada" {
 # b) Una regla de entrada en el security group del servidor privado: HTTP
 #    (TCP 80) solo desde el security group del ALB (module.servicios.sg_alb_id).
 #    Mismo modelo que la regla SSH desde el bastión.
-
+#
 resource "aws_vpc_security_group_ingress_rule" "privada_http" {
   security_group_id            = aws_security_group.privada.id
   description                  = "HTTP desde ALB"
@@ -290,12 +288,11 @@ resource "aws_vpc_security_group_ingress_rule" "privada_http" {
   to_port                      = 80
   referenced_security_group_id = module.servicios.sg_alb_id
 }
-
+#
 # c) Registrar la instancia en el target group.
 #    Recurso: aws_lb_target_group_attachment (target_group_arn, target_id, port).
 #    ¿Qué va en target_id para un target group de tipo "instance"?
 #
-
 resource "aws_lb_target_group_attachment" "privada" {
   target_group_arn = module.servicios.target_group_vm_arn
   target_id        = aws_instance.privada.id
