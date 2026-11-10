@@ -35,13 +35,13 @@ variable "tipo_bastion" {
   type        = string
   default     = "t4g.micro"
 }
-
+#
 variable "tipo_privada" {
   description = "Tipo de instancia del servidor privado (Amazon Linux 2023)."
   type        = string
   default     = "t4g.nano"
 }
-
+#
 variable "version_fedora" {
   description = "Versión de Fedora Cloud a buscar."
   type        = string
@@ -138,8 +138,7 @@ resource "aws_vpc_security_group_egress_rule" "bastion_salida" {
 # A COMPLETAR — servidor privado:
 #   entrada: SSH solo desde el BASTIÓN. No usen una IP: usen el security group
 #            del bastión como origen (atributo referenced_security_group_id).
-#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.
-#            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
+#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.} #            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
 #            from_port = -1, to_port = -1).
 #   salida : libre (sale a Internet a través del NAT).
 #
@@ -171,7 +170,6 @@ resource "aws_vpc_security_group_egress_rule" "privada_salida" {
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
 }
-
 
 # --- TODO 4.4: instancias ------------------------------------------------------------
 # EJEMPLO RESUELTO — bastión:
@@ -216,8 +214,7 @@ resource "aws_instance" "privada" {
   key_name               = aws_key_pair.privada.key_name
   iam_instance_profile   = module.servicios.perfil_instancia
 
-  #Instala nginx y prepara el sitio web al iniciar la instancia
-
+  # Instala nginx y prepara el sitio web al iniciar la instancia
   user_data = templatefile("${path.root}/plantillas/servidor-web.sh.tftpl", {
     script_sitio = module.servicios.script_sitio_vm
   })
