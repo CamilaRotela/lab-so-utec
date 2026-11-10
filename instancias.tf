@@ -35,13 +35,13 @@ variable "tipo_bastion" {
   type        = string
   default     = "t4g.micro"
 }
-
+#
 variable "tipo_privada" {
   description = "Tipo de instancia del servidor privado (Amazon Linux 2023)."
   type        = string
   default     = "t4g.nano"
 }
-
+#
 variable "version_fedora" {
   description = "Versión de Fedora Cloud a buscar."
   type        = string
@@ -59,7 +59,7 @@ variable "version_fedora" {
 data "aws_ami" "amazon_linux" {
   most_recent = true
   owners      = ["amazon"]
-
+  #
   filter {
     name   = "name"
     values = ["al2023-ami-2023.*-kernel-*-arm64"]
@@ -82,7 +82,7 @@ data "aws_ami" "amazon_linux" {
 data "aws_ami" "fedora" {
   most_recent = true
   owners      = ["125523088429"]
-
+  #
   filter {
     name   = "name"
     values = ["Fedora-Cloud-Base*-${var.version_fedora}-*"]
@@ -138,8 +138,7 @@ resource "aws_vpc_security_group_egress_rule" "bastion_salida" {
 # A COMPLETAR — servidor privado:
 #   entrada: SSH solo desde el BASTIÓN. No usen una IP: usen el security group
 #            del bastión como origen (atributo referenced_security_group_id).
-#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.
-#            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
+#            Miren cómo lo hace el módulo en modulos/servicios/ecs.tf.} #            Opcional: ICMP (ping) desde el bastión (ip_protocol = "icmp",
 #            from_port = -1, to_port = -1).
 #   salida : libre (sale a Internet a través del NAT).
 #
@@ -155,7 +154,7 @@ resource "aws_security_group" "privada" {
     Name = "lab-${var.grupo}-privada"
   }
 }
-#
+
 resource "aws_vpc_security_group_ingress_rule" "privada_ssh" {
   security_group_id            = aws_security_group.privada.id
   description                  = "SSH desde bastion"
@@ -164,14 +163,13 @@ resource "aws_vpc_security_group_ingress_rule" "privada_ssh" {
   to_port                      = 22
   referenced_security_group_id = aws_security_group.bastion.id
 }
-#
+
 resource "aws_vpc_security_group_egress_rule" "privada_salida" {
   security_group_id = aws_security_group.privada.id
   description       = "Salida libre"
   ip_protocol       = "-1"
   cidr_ipv4         = "0.0.0.0/0"
 }
-
 
 # --- TODO 4.4: instancias ------------------------------------------------------------
 # EJEMPLO RESUELTO — bastión:
