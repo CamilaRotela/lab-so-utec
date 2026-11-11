@@ -181,6 +181,8 @@ resource "aws_instance" "bastion" {
   vpc_security_group_ids = [aws_security_group.bastion.id]
   key_name               = aws_key_pair.bastion.key_name # clave PROPIA del bastión
   iam_instance_profile   = module.servicios.perfil_instancia
+
+  source_dest_check = false
   #
   #   # Si se ejecuta "sudo shutdown" dentro de la instancia, se APAGA (stop)
   #   # en lugar de destruirse. Lo usamos para el apagado automático.
@@ -244,17 +246,17 @@ resource "aws_instance" "privada" {
 # Genera claves/ssh_config a partir de plantillas/ssh_config.tftpl, con las IP
 # reales. Descomenten cuando las dos instancias existan.
 #
-# resource "local_file" "ssh_config" {
-#   filename        = "${path.root}/claves/ssh_config"
-#   file_permission = "0600"
-#   content = templatefile("${path.root}/plantillas/ssh_config.tftpl", {
-#     dir             = abspath("${path.root}/claves")
-#     ip_bastion      = aws_instance.bastion.public_ip
-#     usuario_bastion = "fedora"
-#     ip_privada      = aws_instance.privada.private_ip
-#     usuario_privada = "ec2-user"
-#   })
-# }
+resource "local_file" "ssh_config" {
+  filename        = "${path.root}/claves/ssh_config"
+  file_permission = "0600"
+  content = templatefile("${path.root}/plantillas/ssh_config.tftpl", {
+    dir             = abspath("${path.root}/claves")
+    ip_bastion      = aws_instance.bastion.public_ip
+    usuario_bastion = "fedora"
+    ip_privada      = aws_instance.privada.private_ip
+    usuario_privada = "ec2-user"
+  })
+}
 
 
 # --- TODO 4.6: publicar el servidor privado detrás del ALB -----------------------
