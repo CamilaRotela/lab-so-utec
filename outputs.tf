@@ -37,19 +37,19 @@ output "urls_sitio" {
 }
 
 # --- Parte 4 -----------------------------------------------------------------------
-# output "ip_publica_bastion" {
-#   description = "Cambia cada vez que el bastión se apaga y se enciende."
-#   value       = aws_instance.bastion.public_ip
-# }
+output "ip_publica_bastion" {
+  description = "Cambia cada vez que el bastión se apaga y se enciende."
+  value       = aws_instance.bastion.public_ip
+}
 #
-# output "ip_privada_servidor" {
-#   value = aws_instance.privada.private_ip
-# }
+output "ip_privada_servidor" {
+  value = aws_instance.privada.private_ip
+}
 #
-# output "ssh_bastion" {
-#   value = "ssh -F claves/ssh_config lab-bastion"
-# }
+output "ssh_bastion" {
+  value = "ssh -F claves/ssh_config lab-bastion"
+}
 #
-# output "ssh_privada" {
-#   value = "ssh -F claves/ssh_config lab-privada"
-# }
+output "ssh_privada" {
+  value = "ssh -F claves/ssh_config lab-privada"
+}
